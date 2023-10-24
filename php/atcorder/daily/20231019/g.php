@@ -14,46 +14,38 @@
  */
 $init = function () {
     list($n, $m) = explode(" ", trim(fgets(STDIN)));
-    $queues = array_fill(0, $n, []);
+    $graph = [];
     for ($i = 0; $i < $m; $i++) {
         $k = trim(fgets(STDIN));
         $balls = explode(" ", trim(fgets(STDIN)));
-        for ($j = (int)$k - 1; $j >= 1; $j--) {
-            for ($l = $j - 1; $l >= 0; $l--) {
-                if (!in_array((int)$balls[$l] - 1, $queues[(int)$balls[$j] - 1])) {
-                    $queues[(int)$balls[$j] - 1][] = (int)$balls[$l] - 1;
-                }
+        for ($j = 1; $j < $k; $j++) {
+            for ($l = 0; $l < $j; $l++) {
+                $graph[] = [(int)$balls[$j] - 1, (int)$balls[$l] - 1];
             }
         }
     }
-    return [(int)$n, (int)$m, $queues];
+    $isVisited = array_fill(0, $n, false);
+    return [(int)$n, (int)$m, $graph, $isVisited];
 };
 
-/**
- * @var int $n ボールの数
- * @var int $m 筒の数
- * @var array<int, int[]> $queues キーが取り出すボールの番号、要素がボールを取り出すのを阻害しているボールの番号の配列とする二次元配列
- */
-list($n, $m, $queues) = $init();
+list($n, $m, $graph, $isVisited) = $init();
 
-while (true) {
-    /** @var int[] $unsets 取り出すことができるボールの番号の配列 */
-    $unsets = array_keys(array_filter($queues, fn(array $waits) => empty($waits)));
-    if (count($unsets) === 0) {
-        break;
-    }
-
-    foreach ($queues as $num => &$waits) {
-        if (in_array($num, $unsets)) {
-            unset($queues[$num]);
-        } else {
-            $waits = array_values(array_diff($waits, $unsets));
+$visit = function (int $start, int $position) use (&$visit, &$isVisited, $graph) {
+    $isVisited[$position] = true;
+    foreach ($graph as $key => $node) {
+        if ($node[0] === $position && $node[1] === $start) {
+            echo "No\n";
+            exit;
+        } elseif ($node[0] === $position && !$isVisited[$node[1]]) {
+            unset($graph[$key]);
+            $visit($start, $node[1]);
         }
     }
-}
+};
 
-if (count($queues) > 0) {
-    echo "No\n";
-} else {
-    echo "Yes\n";
+for ($i = 0; $i < $n; $i++) {
+    if (!$isVisited[$i]) {
+        $visit($i, $i);
+    }
 }
+echo "Yes\n";
