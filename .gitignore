@@ -1,5 +1,6 @@
 .idea
 .vscode
+.python-version
 input.txt
 output.txt
 *.out
